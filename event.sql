@@ -1,0 +1,22 @@
+CREATE TABLE `t_event` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '应用ID',
+  `event_no` varchar(100) NOT NULL COMMENT '事件NO',
+  `source` varchar(100) NOT NULL COMMENT '消息来源',
+  `ack_source` varchar(100) NULL COMMENT 'ACK消息来源',
+  `content` text NOT NULL COMMENT '消息内容',
+  `ack_content` text NULL COMMENT 'ack消息内容',
+  `event_name` varchar(50) NOT NULL COMMENT '消息名称',
+  `send_cnt` int(11) NOT NULL DEFAULT '0' COMMENT '发送次数',
+  `event_status` enum('WAIT_ACK','ACKED') NOT NULL COMMENT '事件状态',
+  `ack_no` varchar(100) NULL COMMENT 'ackNO',
+  `last_send_time` timestamp NULL DEFAULT NULL COMMENT '发送时间',
+  `receive_time` timestamp NULL DEFAULT NULL COMMENT '接收事件',
+  `next_send_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '下次发送时间',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `last_update_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unq_t_event_event_no` (`event_no`),
+  UNIQUE KEY `unq_t_event_ack_no` (`ack_no`),
+  KEY `index_t_event_event_name` (`event_name`),
+  KEY `index_t_event_event_status` (`event_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='事件表';
