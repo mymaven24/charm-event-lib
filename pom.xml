@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.swwx</groupId>
 	<artifactId>charm-event-lib</artifactId>
-	<version>0.0.6</version>
+	<version>0.0.9</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -33,43 +33,73 @@
 		<zookeeper_version>3.4.6</zookeeper_version>
 	</properties>
 
+	<distributionManagement>
+		<repository>
+			<id>release</id>
+			<name>Release</name>
+			<url>http://127.0.0.1:8081/nexus/repository/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshot</id>
+			<name>Snapshot</name>
+			<url>http://127.0.0.1:8081/nexus/repository/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<build>
 		<plugins>
-			<!-- 生成源码和Javadoc -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<executions><execution><phase>verify</phase></execution></executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<executions><execution><phase>verify</phase></execution></executions>
-			</plugin>
-			<!-- 发布插件 -->
-			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.13</version>
-				<extensions>true</extensions>
-				<configuration>
-					<serverId>ossrh</serverId>
-					<nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-				</configuration>
-			</plugin>
-			<!-- GPG签名插件 -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>${maven_source_plugin_version}</version>
 				<executions>
 					<execution>
-						<phase>verify</phase>
-						<goals><goal>sign</goal></goals>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<attach>true</attach>
+				</configuration>
 			</plugin>
 		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${maven_compiler_plugin_version}</version>
+					<configuration>
+						<source>${java_source_version}</source>
+						<target>${java_target_version}</target>
+						<encoding>${file_encoding}</encoding>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>${maven_jar_plugin_version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>${maven_war_plugin_version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>${maven_install_plugin_version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>${maven_deploy_plugin_version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<dependencies>
 		<dependency>
@@ -93,7 +123,7 @@
 		<dependency>
 			<groupId>com.swwx</groupId>
 			<artifactId>charm-mq</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.swwx</groupId>
@@ -103,7 +133,7 @@
 		<dependency>
 			<groupId>com.swwx</groupId>
 			<artifactId>charm-commons</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
 </project>
