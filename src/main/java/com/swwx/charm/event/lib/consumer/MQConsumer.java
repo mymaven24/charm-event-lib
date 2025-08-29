@@ -1,11 +1,5 @@
 package com.swwx.charm.event.lib.consumer;
 
-import java.util.Date;
-
-import com.swwx.charm.event.lib.util.QueueNameUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.alibaba.fastjson.JSON;
 import com.swwx.charm.commons.lang.utils.CharmStringUtils;
 import com.swwx.charm.commons.lang.utils.LogPortal;
@@ -16,11 +10,17 @@ import com.swwx.charm.event.lib.entity.Event;
 import com.swwx.charm.event.lib.entity.EventMessage;
 import com.swwx.charm.event.lib.type.EventStatus;
 import com.swwx.charm.event.lib.type.EventType;
+import com.swwx.charm.event.lib.util.DateUtil;
+import com.swwx.charm.event.lib.util.QueueNameUtils;
 import com.swwx.charm.mq.support.spring.AbstractMQConsumer;
 import com.swwx.charm.mq.support.spring.MQProvider;
 import com.swwx.charm.zookeeper.exception.GetLockFailedException;
 import com.swwx.charm.zookeeper.exception.ReleaseLockFailedException;
 import com.swwx.charm.zookeeper.lock.DistributedLock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 /**
  * MQ消息消费者
@@ -91,25 +91,23 @@ public abstract class MQConsumer<T> extends AbstractMQConsumer {
     }
 
     private void executeSendMessage(EventMessage message) throws Exception {
-
         boolean isLock = false;
         String lockName = this.getClass().getSimpleName() + "-" + message.getEventNo();
         try {
-
             isLock = getDistributedLock().getLock(lockName);
-
             if (!isLock) {
                 return;
             }
-
-            Event event = eventDAO.findByEventNo(message.getEventNo());
+            Integer generatorTimeIndex =Integer.parseInt(message.getEventNo().substring(0,8));
+            Event event = eventDAO.findByEventNo(message.getEventNo(),generatorTimeIndex);
             if (event != null && event.getEventStatus().equals(EventStatus.ACKED)) {
                 ack(event.getAckContent(), message.getEventNo(), event.getAckNo());
                 return;
             }
-
             Object ack = execute(convert(message.getData()));
-            String ackNo = CharmStringUtils.generateUUID();
+            Date currentDate = new Date();
+            Integer currentGeneratorTimeIndex = DateUtil.dateToInteger(currentDate);
+            String ackNo =currentGeneratorTimeIndex+CharmStringUtils.generateUUID();
             event = new Event();
             event.setAckNo(ackNo);
             event.setContent(convertString(message.getData()));
@@ -119,10 +117,10 @@ public abstract class MQConsumer<T> extends AbstractMQConsumer {
             event.setEventName(message.getEventName());
             event.setLastSendTime(message.getSendTime());
             event.setAckContent(convertString(ack));
-            event.setReceiveTime(new Date());
+            event.setReceiveTime(currentDate);
             event.setAckSource(getAckSource());
+            event.setGenerateTimeIndex(currentGeneratorTimeIndex);
             eventDAO.save(event);
-
             ack(ack, message.getEventNo(), ackNo);
         } catch(GetLockFailedException e) {
             LogPortal.error(e.getMessage(), e);
@@ -146,10 +144,9 @@ public abstract class MQConsumer<T> extends AbstractMQConsumer {
         ackMessage.setEventType(EventType.ACK);
         ackMessage.setAckNo(ackNo);
         ackMessage.setEventName(getEventName());
-
-        System.out.println(JSON.toJSONString(ackMessage));
-        mqProvider.productMessage(QueueNameUtils.getAckQueueName(getEventName()), getAckEventExpiredTime(),
-            JSON.toJSONString(ackMessage));
+        String ackData = JSON.toJSONString(ackMessage);
+        LogPortal.info("ackData:{}",ackData);
+        mqProvider.productMessage(QueueNameUtils.getAckQueueName(getEventName()), getAckEventExpiredTime(),ackData);
     }
 
     private T convert(Object data) throws Exception {

@@ -9,6 +9,7 @@ import com.swwx.charm.event.lib.entity.EventForm;
 import com.swwx.charm.event.lib.entity.EventMessage;
 import com.swwx.charm.event.lib.type.EventStatus;
 import com.swwx.charm.event.lib.type.EventType;
+import com.swwx.charm.event.lib.util.DateUtil;
 import com.swwx.charm.event.lib.util.QueueNameUtils;
 import com.swwx.charm.mq.support.spring.MQProvider;
 import org.apache.commons.lang.StringUtils;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +37,9 @@ public class EventServiceImpl implements EventService {
 
     public Event addEvent(EventForm form) {
         Event event = new Event();
-        event.setEventNo(CharmStringUtils.generateUUID());
+        Integer generateTimeIndex =DateUtil.dateToInteger(DateUtil.getNowDate());
+        event.setEventNo(generateTimeIndex+CharmStringUtils.generateUUID());
+        event.setGenerateTimeIndex(generateTimeIndex);
         event.setEventName(form.getEventName());
         event.setContent(form.getData() == null ? null : JSON.toJSONString(form.getData()));
         event.setSource(form.getSource());
@@ -50,11 +54,17 @@ public class EventServiceImpl implements EventService {
     }
 
     public List<Event> getNeedSendEvent(String eventName) {
-        return eventDAO.findNeedSendEvent(eventName);
+        Integer currentTimeIndex =DateUtil.dateToInteger(DateUtil.getNowDate());
+        Integer beforeTimeIndex =DateUtil.dateToInteger(DateUtil.getDayBeforeDay(1));
+        List<Integer> timeIndexList = new ArrayList<>();
+        timeIndexList.add(currentTimeIndex);
+        timeIndexList.add(beforeTimeIndex);
+        return eventDAO.findNeedSendEvent(eventName,timeIndexList);
     }
 
     public void sendEvent(Event event, Integer expiredTimes) {
-        event = eventDAO.lockEvent(event.getId());
+        Integer generatorTimeIndex =Integer.parseInt(event.getEventNo().substring(0,8));
+        event = eventDAO.lockEvent(event.getId(),generatorTimeIndex);
         if (event.getEventStatus().equals(EventStatus.ACKED)) {
             return;
         }
@@ -64,12 +74,17 @@ public class EventServiceImpl implements EventService {
         } catch(Exception e) {
             LogPortal.error(e.getMessage(), e);
         }
-        eventDAO.updateEventByWaitAck(event.getId(), getNextSendTime(event.getSendCnt()), new Date());
+        eventDAO.updateEventByWaitAck(event.getId(), getNextSendTime(event.getSendCnt()), new Date(),generatorTimeIndex);
     }
 
     @Override
     public List<Event> getNeedSendEventByPageSize(String eventName, int pageSize) {
-        return eventDAO.findNeedSendEventByPageSize(eventName,pageSize);
+        Integer currentTimeIndex =DateUtil.dateToInteger(DateUtil.getNowDate());
+        Integer beforeTimeIndex =DateUtil.dateToInteger(DateUtil.getDayBeforeDay(1));
+        List<Integer> timeIndexList = new ArrayList<>();
+        timeIndexList.add(currentTimeIndex);
+        timeIndexList.add(beforeTimeIndex);
+        return eventDAO.findNeedSendEventByPageSize(eventName,pageSize,timeIndexList);
     }
 
     private EventMessage genEventMessage(Event event) {
@@ -91,6 +106,6 @@ public class EventServiceImpl implements EventService {
                 break;
             }
         }
-        return DateUtils.addSeconds(new Date(), Long.valueOf(Math.round(cnt)).intValue());
+        return DateUtils.addSeconds(DateUtil.getNowDate(), Long.valueOf(Math.round(cnt)).intValue());
     }
 }

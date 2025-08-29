@@ -2,12 +2,7 @@ package com.swwx.charm.event.lib.entity;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Generated;
@@ -18,6 +13,7 @@ import com.swwx.charm.event.lib.type.EventStatus;
 
 @Entity
 @DynamicUpdate(true)
+@Table(name = "t_event_new")
 public class Event extends BasicTO {
 
     private static final long serialVersionUID = 1L;
@@ -109,6 +105,8 @@ public class Event extends BasicTO {
     @Generated(GenerationTime.ALWAYS)
     @Column(insertable = false, updatable = false)
     private Date lastUpdateTime;
+
+    private Integer generateTimeIndex;
 
     public Long getId() {
         return id;
@@ -228,5 +226,13 @@ public class Event extends BasicTO {
 
     public void setAckSource(String ackSource) {
         this.ackSource = ackSource;
+    }
+
+    public Integer getGenerateTimeIndex() {
+        return generateTimeIndex;
+    }
+
+    public void setGenerateTimeIndex(Integer generateTimeIndex) {
+        this.generateTimeIndex = generateTimeIndex;
     }
 }

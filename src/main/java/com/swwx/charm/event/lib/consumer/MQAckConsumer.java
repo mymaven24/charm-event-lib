@@ -50,7 +50,8 @@ public abstract class MQAckConsumer<T> extends AbstractMQConsumer {
     protected abstract void execute(T message) throws Exception;
 
     private void executeAckMessage(EventMessage message) throws Exception {
-        Event event = eventDAO.findByEventNo(message.getEventNo());
+        Integer generatorTimeIndex =Integer.parseInt(message.getEventNo().substring(0,8));
+        Event event = eventDAO.findByEventNo(message.getEventNo(),generatorTimeIndex);
         if (event == null) {
             return;
         }
