@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.swwx</groupId>
 	<artifactId>charm-event-lib</artifactId>
-	<version>0.0.9</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -123,7 +123,7 @@
 		<dependency>
 			<groupId>com.swwx</groupId>
 			<artifactId>charm-mq</artifactId>
-			<version>0.0.3</version>
+			<version>0.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.swwx</groupId>

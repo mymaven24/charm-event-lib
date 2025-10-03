@@ -147,7 +147,7 @@ public abstract class MQConsumer<T> extends AbstractMQConsumer {
         ackMessage.setAckNo(ackNo);
         ackMessage.setEventName(getEventName());
 
-        System.out.println(JSON.toJSONString(ackMessage));
+        LogPortal.info(JSON.toJSONString(ackMessage));
         mqProvider.productMessage(QueueNameUtils.getAckQueueName(getEventName()), getAckEventExpiredTime(),
             JSON.toJSONString(ackMessage));
     }
